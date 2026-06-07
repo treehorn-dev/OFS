@@ -138,6 +138,8 @@ elseif(UNIX AND NOT APPLE AND NOT EMSCRIPTEN)
 	# instead libmpv.so.1 is loaded at runtime
 	# this avoids linking issues with mpv and lua symbols
 elseif(APPLE)
+	unset(MPV_INCLUDE CACHE)
+	unset(MPV_LIBRARY CACHE)
 	execute_process(
 		COMMAND brew --prefix mpv
 		RESULT_VARIABLE BREW_MPV
@@ -147,9 +149,22 @@ elseif(APPLE)
 	if (BREW_MPV EQUAL 0 AND EXISTS "${BREW_MPV_PREFIX}")
 		message(STATUS "Found mpv installed by Homebrew at ${BREW_MPV_PREFIX}")
 		set(MPV_INCLUDE "${BREW_MPV_PREFIX}/include")
-		set(MPV_LIB "${BREW_MPV_PREFIX}/lib")
+		set(MPV_LIBRARY "${BREW_MPV_PREFIX}/lib/libmpv.dylib")
+	else()
+		find_package(PkgConfig)
+		if(PkgConfig_FOUND)
+			pkg_check_modules(MPV QUIET mpv)
+		endif()
+		if(MPV_FOUND)
+			message(STATUS "Found mpv with pkg-config")
+			find_path(MPV_INCLUDE mpv/client.h HINTS ${MPV_INCLUDE_DIRS} NO_DEFAULT_PATH)
+			find_library(MPV_LIBRARY mpv HINTS ${MPV_LIBRARY_DIRS} NO_DEFAULT_PATH)
+		endif()
 	endif()
 	target_include_directories(${PROJECT_NAME} PUBLIC
 		"${MPV_INCLUDE}"
 	)
+	if(MPV_LIBRARY)
+		target_compile_definitions(${PROJECT_NAME} PUBLIC "OFS_MPV_DYLIB=\"${MPV_LIBRARY}\"")
+	endif()
 endif()

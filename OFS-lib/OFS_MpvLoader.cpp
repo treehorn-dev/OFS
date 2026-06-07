@@ -40,7 +40,12 @@ bool OFS_MpvLoader::Load() noexcept
 #if defined(WIN32)
     mpvHandle = SDL_LoadObject("mpv-2.dll");
 #elif defined(__APPLE__)
+#ifdef OFS_MPV_DYLIB
+    mpvHandle = SDL_LoadObject(OFS_MPV_DYLIB);
+#endif
+    if (!mpvHandle) {
     mpvHandle = SDL_LoadObject("libmpv.dylib");
+    }
 #else // linux
     mpvHandle = SDL_LoadObject("libmpv.so.2");
     if (!mpvHandle) {

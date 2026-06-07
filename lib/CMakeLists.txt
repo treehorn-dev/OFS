@@ -107,6 +107,9 @@ set(SDL_LIBC ON CACHE BOOL "" FORCE)
 set(SDL_DIRECTX OFF CACHE BOOL "" FORCE)
 set(SDL_RENDER_D3D OFF CACHE BOOL "" FORCE)
 set(SDL_VULKAN OFF CACHE BOOL "" FORCE)
+# SDL's vendored HIDAPI code is not declaration-after-statement clean on macOS,
+# but this SDL CMake version promotes that diagnostic to an error.
+set(HAVE_GCC_WERROR_DECLARATION_AFTER_STATEMENT FALSE CACHE INTERNAL "" FORCE)
 add_subdirectory("SDL2/")
 
 

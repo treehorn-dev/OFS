@@ -181,6 +181,20 @@ bool OFS_Videoplayer::Init(bool hwAccel) noexcept
         LOGF_WARN("Failed to set mpv: config-dir=%s", confPath.c_str());
     }
 
+#if defined(__APPLE__) && defined(__arm64__)
+    // Apple Silicon workaround from @iii3iei33iii:
+    // https://discuss.eroscripts.com/t/openfunscripter-3-2-0-for-macos/137150/48
+    hwAccel = false;
+    error = mpv_set_option_string(CTX->mpv, "vo", "libmpv");
+    if(error != 0) {
+        LOG_WARN("Failed to set mpv: vo=libmpv");
+    }
+    error = mpv_set_option_string(CTX->mpv, "gpu-context", "cocoa");
+    if(error != 0) {
+        LOG_WARN("Failed to set mpv: gpu-context=cocoa");
+    }
+#endif
+
     if(mpv_initialize(CTX->mpv) != 0) {
         return false;
     }

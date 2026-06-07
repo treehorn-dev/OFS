@@ -20,9 +20,14 @@
 #include "OFS_Profiling.h"
 #include "OFS_FileLogging.h"
 
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
 #include "emmintrin.h" // for _mm_pause
-
 #define OFS_PAUSE_INTRIN _mm_pause
+#elif defined(__aarch64__) || defined(__arm64__) || defined(__arm__)
+#define OFS_PAUSE_INTRIN __builtin_arm_yield
+#else
+#define OFS_PAUSE_INTRIN() ((void)0)
+#endif
 
 // helper for FontAwesome. Version 4.7.0 2016 ttf
 #define ICON_FOLDER_OPEN "\xef\x81\xbc"
@@ -203,7 +208,8 @@ public:
     inline static nlohmann::json ParseCBOR(const std::vector<uint8_t>& data, bool* success) noexcept
     {
         try {
-            auto json = nlohmann::json::from_cbor(data);
+            const auto first = reinterpret_cast<const char*>(data.data());
+            auto json = nlohmann::json::from_cbor(first, first + data.size());
             *success = !json.is_discarded();
             return json;
         }
